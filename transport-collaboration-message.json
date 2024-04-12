@@ -1,0 +1,278 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "https://git.ri.se/collaborative-decision-making/transport-collaboration-messaging-format/-/blob/main/src/main/resources/schemas/transport-collaboration-message.json",
+  "title": "Transport Collaboration Message",
+  "description": "Messaging format for Collaborative Decision Making in multi-modal transports",
+  "version": "0.0.7",
+  "type": "object",
+  "properties": {
+    "messageId": {
+      "description": "Unique identifier for the message",
+      "$ref": "#/definitions/MessageIdentifier"
+    },
+    "version": {
+      "const": "0.0.7"
+    },
+    "reportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When was this message delivered for publication"
+    },
+    "reportedBy": {
+      "type": "string",
+      "pattern": "^tcmf:user:(.*)(:.*)*$",
+      "description": "Who delivered this message"
+    },
+    "source": {
+      "type": "string",
+      "description": "What created this message"
+    },
+    "comment": {
+      "type": "string"
+    },
+    "grouping": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^tcmf:grouping:(ship|truck|train|wagon|shipment|airplane|trailer|cargo_carrier)(:.*)*$"
+      }
+    },
+    "payload": {
+      "oneOf": [
+        {
+          "$ref": "#/payloadTypes/LocationState"
+        },
+        {
+          "$ref": "#/payloadTypes/ServiceState"
+        },
+        {
+          "$ref": "#/payloadTypes/AdministrativeState"
+        },
+        {
+          "$ref": "#/payloadTypes/CarrierState"
+        },
+        {
+          "$ref": "#/payloadTypes/AttributeState"
+        },
+        {
+          "$ref": "#/payloadTypes/MessageOperation"
+        }
+      ]
+    }
+  },
+  "required": ["payload", "grouping", "version"],
+  "definitions": {
+    "MessageIdentifier": {
+      "type": "string",
+      "pattern": "tcmf:message:[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}"
+    },
+    "TimeType": {
+      "type": "string",
+      "enum": ["planned", "estimated", "actual"]
+    },
+    "Time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "ReferenceObject": {
+      "type": "string",
+      "pattern": "^tcmf:reference_object:(.*)(:.*)*$"
+    },
+    "Service": {
+      "type": "string",
+      "pattern": "^tcmf:service:(.*)(:.*)*$"
+    },
+    "Location": {
+      "type": "string",
+      "pattern": "^(tcmf:location:(.*)(:.*)*)$"
+    },
+    "Carrier": {
+      "type": "string",
+      "pattern": "^tcmf:carrier:(.*)(:.*)*$"
+    },
+    "Attribute": {
+      "type": "string",
+      "pattern": "^tcmf:attribute:(.*)(:.*)*$"
+    }
+  },
+  "payloadTypes": {
+    "LocationState": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "const": "LocationState"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "location": {
+          "$ref": "#/definitions/Location"
+        },
+        "timeType": {
+          "$ref": "#/definitions/TimeType"
+        },
+        "timeSequence": {
+          "type": "string",
+          "enum": ["arrived_to", "departed_from", "passed_by"]
+        },
+        "referenceObject": {
+          "$ref": "#/definitions/ReferenceObject"
+        }
+      },
+      "required": [
+        "@type",
+        "time",
+        "location",
+        "timeType",
+        "timeSequence",
+        "referenceObject"
+      ]
+    },
+    "ServiceState": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "const": "ServiceState"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "timeType": {
+          "$ref": "#/definitions/TimeType"
+        },
+        "timeSequence": {
+          "type": "string",
+          "enum": ["commenced", "completed"]
+        },
+        "referenceObject": {
+          "$ref": "#/definitions/ReferenceObject"
+        },
+        "service": {
+          "$ref": "#/definitions/Service"
+        },
+        "location": {
+          "$ref": "#/definitions/Location"
+        }
+      },
+      "required": ["@type", "time", "timeType", "timeSequence", "service"]
+    },
+    "AdministrativeState": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "const": "AdministrativeState"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "timeSequence": {
+          "type": "string",
+          "enum": [
+            "requested",
+            "request_received",
+            "confirmed",
+            "cancelled",
+            "denied",
+            "assigned"
+          ]
+        },
+        "referenceObject": {
+          "$ref": "#/definitions/ReferenceObject"
+        },
+        "service": {
+          "$ref": "#/definitions/Service"
+        },
+        "location": {
+          "$ref": "#/definitions/Location"
+        }
+      },
+      "required": ["@type", "time", "timeSequence", "service"]
+    },
+    "CarrierState": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "const": "CarrierState"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "timeType": {
+          "$ref": "#/definitions/TimeType"
+        },
+        "location": {
+          "$ref": "#/definitions/Location"
+        },
+        "carrier": {
+          "$ref": "#/definitions/Carrier"
+        },
+        "referenceObject": {
+          "$ref": "#/definitions/ReferenceObject"
+        },
+        "timeSequence": {
+          "type": "string",
+          "enum": ["bound_to", "unbound_from"]
+        }
+      },
+      "required": [
+        "@type",
+        "time",
+        "timeType",
+        "carrier",
+        "timeSequence",
+        "referenceObject"
+      ]
+    },
+    "AttributeState": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "const": "AttributeState"
+        },
+        "time": {
+          "$ref": "#/definitions/Time"
+        },
+        "timeType": {
+          "$ref": "#/definitions/TimeType"
+        },
+        "attribute": {
+          "$ref": "#/definitions/Attribute"
+        },
+        "location": {
+          "$ref": "#/definitions/Location"
+        },
+        "referenceObject": {
+          "$ref": "#/definitions/ReferenceObject"
+        },
+        "timeSequence": {
+          "type": "string",
+          "enum": ["set", "unset"]
+        }
+      },
+      "required": [
+        "@type",
+        "time",
+        "timeType",
+        "attribute",
+        "timeSequence",
+        "referenceObject"
+      ]
+    },
+    "MessageOperation": {
+      "type": "object",
+      "properties": {
+        "@type": {
+          "const": "MessageOperation"
+        },
+        "messageId": {
+          "$ref": "#/definitions/MessageIdentifier"
+        },
+        "operation": {
+          "type": "string",
+          "enum": ["invalidate"]
+        }
+      },
+      "required": ["@type", "messageId", "operation"]
+    }
+  }
+}
