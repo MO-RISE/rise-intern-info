@@ -1,0 +1,253 @@
+{
+  "$schema": "http://json-schema.org/draft-06/schema#",
+  "$id": "urn:cdm:railway:rcmf:message:0.1",
+  "title": "Railway Collaboration Messaging Format - message",
+  "description": "Messaging format for Collaborative Decision Making in railway transports",
+  "type": "object",
+  "properties": {
+    "messageId": {
+      "description": "Unique identifier for the message",
+      "$ref": "#/definitions/MessageIdentifier"
+    },
+    "reportedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When was this message delivered for publication"
+    },
+    "train": {
+      "$ref": "#/definitions/Train"
+    },
+    "reportedBy": {
+      "type": "string",
+      "description": "Who delivered this message"
+    },
+    "payload": {
+      "$ref": "#/definitions/Payload"
+    }
+  },
+  "definitions": {
+    "Payload": {
+      "type": "object",
+      "properties": {
+        "comment": {
+          "type": "string"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "time"
+      ]
+    },
+    "LocationState": {
+      "type": "object",
+      "extends": {
+        "$ref": "#/definitions/Payload"
+      },
+      "properties": {
+        "timeSequence": {
+          "enum": [
+            "arrivalTo",
+            "departureFrom",
+            "passingBy"
+          ]
+        },
+        "timeType": {
+          "$ref": "#/definitions/TimeType"
+        },
+        "referenceObject": {
+          "$ref": "#/identifier/ReferenceObject"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "from": {
+          "$ref": "#/definitions/Location"
+        },
+        "to": {
+          "$ref": "#/definitions/Location"
+        },
+        "at": {
+          "$ref": "#/definitions/Location"
+        },
+        "trainDirection": {
+          "$ref": "#/identifier/TrainDirection"
+        }
+      },
+      "required": [
+        "referenceObject",
+        "timeSequence",
+        "timeType"
+      ],
+      "identifier": {
+        "ReferenceObject": {
+          "type": "string",
+          "pattern": "^rcmf:reference_object:(catering|driver|faecal_emptying|maintenance_operator|staff|train|wagon|water_pressure)(:.*)*$"
+        },
+        "TrainDirection": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      }
+    },
+    "ServiceState": {
+      "type": "object",
+      "extends": {
+        "$ref": "#/definitions/Payload"
+      },
+      "properties": {
+        "timeSequence": {
+          "enum": ["commenced", "completed"]
+        },
+        "timeType": {
+          "$ref": "#/definitions/TimeType"
+        },
+        "serviceObject": {
+          "$ref": "#/definitions/ServiceObject"
+        },
+        "from": {
+          "$ref": "#/definitions/Location"
+        },
+        "to": {
+          "$ref": "#/definitions/Location"
+        },
+        "at": {
+          "$ref": "#/definitions/Location"
+        }
+      },
+      "required": ["serviceObject", "timeSequence", "timeType"]
+    },
+    "AdministrativeState": {
+      "type": "object",
+      "extends": {
+        "$ref": "#/definitions/Payload"
+      },
+      "properties": {
+        "timeSequence": {
+          "enum": [
+            "cancelled",
+            "confirmed",
+            "denied",
+            "request_received",
+            "requested",
+            "required"
+          ]
+        },
+        "serviceObject": {
+          "$ref": "#/definitions/ServiceObject"
+        },
+        "time": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "from": {
+          "$ref": "#/definitions/Location"
+        },
+        "to": {
+          "$ref": "#/definitions/Location"
+        },
+        "at": {
+          "$ref": "#/definitions/Location"
+        }
+      },
+      "required": [
+        "timeSequence"
+      ],
+      "additionalProperties": false
+    },
+    "ServiceObject": {
+      "type": "string",
+      "pattern": "^rcmf:service_object:(catering|cleaning|clearance|faecal_emptying|function_test|journey|maintenance|measure|passenger_boarding|rescheduling|specific_needs|train_formation|water_pressure|marshalling|train_becomes)(:.*)*$"
+    },
+    "TimeType": {
+      "type": "string",
+      "enum": [
+        "Planned",
+        "Estimated",
+        "Actual"
+      ]
+    },
+    "Location": {
+      "type": "string",
+      "pattern": "^(rcmf:location:(depot|rfid_reader|station|train|platform|track|yard)(:.*)*)|(urn:epc:id:sgln:.*)$",
+      "description": "Location accepts one of two formats: RCMF native or sgln global location identifier"
+    },
+    "MessageIdentifier": {
+      "type": "string",
+      "pattern": "rcmf:message:[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}"
+    },
+    "Train": {
+      "type": "object",
+      "properties": {
+        "trainId": {
+          "type": "string"
+        },
+        "journeyId": {
+          "type": "string"
+        },
+        "technicalTrainNumber": {
+          "type": "string",
+          "pattern": "rcmf:train:technical:.*"
+        },
+        "advertisedTrainNumber": {
+          "type": "string",
+          "pattern": "rcmf:train:advertised:.*"
+        },
+        "operator": {
+          "type": "string"
+        },
+        "startStation": {
+          "type": "string"
+        },
+        "endStation": {
+          "type": "string"
+        },
+        "vehicle": {
+          "$ref": "#/definitions/Vehicle"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "Vehicle": {
+      "type": "object",
+      "properties": {
+        "units": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "traction": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "maxSpeed": {
+          "type": "number"
+        },
+        "totalLength": {
+          "type": "number"
+        },
+        "totalWeight": {
+          "type": "number"
+        }
+      }
+    }
+  },
+  "required": [
+    "messageId",
+    "payload"
+  ]
+}
